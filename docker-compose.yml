@@ -1,0 +1,71 @@
+
+services:
+  postgres_db:
+    image: postgres:15-alpine
+    container_name: smarthr_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: smart_hr_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - smarthr_network
+
+  # 🌐 2. ระบบหลังบ้าน
+  smart-hr-api:
+    build:
+      context: ./smart-hr-api
+      dockerfile: Dockerfile
+    container_name: smarthr_backend_api
+    restart: always
+    ports:
+      - "3001:3001"
+    environment:
+      DATABASE_URL: "postgresql://postgres:admin@postgres_db:5432/smart_hr_db?schema=public"
+      NEXT_PUBLIC_API_URL: "http://localhost:3001/api"
+      WATCHPACK_POLLING: "true" # 🚀 ทริกพิเศษสำหรับ Windows: บังคับให้ Webpack คอยรีเช็กไฟล์บ่อยๆ
+      CHOKIDAR_USEPOLLING: "true"
+      CHOKIDAR_INTERVAL: "1000"
+    # 🎯 เพิ่มบล็อก volumes ตรงนี้ครับ!
+    volumes:
+      - ./smart-hr-api:/app # ผูกโฟลเดอร์ในเครื่องเข้าตู้ Docker
+      - /app/node_modules # บล็อกห้ามใช้ node_modules จากเครื่องเรา (ให้ใช้ของในตู้คอนเทนเนอร์แทน)
+    depends_on:
+      - postgres_db
+    networks:
+      - smarthr_network
+
+  # 🎨 3. ระบบหน้าบ้าน
+  smart-hr-platform:
+    build:
+      context: ./smart-hr-platform
+      dockerfile: Dockerfile
+    container_name: smarthr_frontend_web
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:3001/api
+      - WATCHPACK_POLLING=true # 🚀 เปิดระบบดักจับการเปลี่ยนแปลงไฟล์บนระบบจำลองคอนเทนเนอร์
+      - CHOKIDAR_USEPOLLING=true
+      - CHOKIDAR_INTERVAL=1000
+    # 🎯 เพิ่มบล็อก volumes ตรงนี้เช่นกันครับ!
+    volumes:
+      - ./smart-hr-platform:/app
+      - /app/node_modules
+      - /app/.next # บล็อกไม่ให้ไฟล์แคช .next ข้างนอกไปตีกับข้างในตู้
+    depends_on:
+      - smart-hr-api
+    networks:
+      - smarthr_network
+
+volumes:
+  postgres_data:
+
+networks:
+  smarthr_network:
+    driver: bridge

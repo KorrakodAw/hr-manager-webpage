@@ -1,0 +1,50 @@
+datasource db {
+  provider = "postgresql"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  EMPLOYEE
+  MANAGER
+  SUPERADMIN
+}
+
+enum LeaveType {
+  SICK
+  ANNUAL
+  PERSONAL
+}
+
+enum LeaveStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model User {
+  id         String         @id @default(uuid())
+  email      String         @unique
+  password   String
+  name       String
+  department String
+  role       Role           @default(EMPLOYEE)
+  leaves     LeaveRequest[] 
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+}
+
+model LeaveRequest {
+  id        String      @id @default(uuid())
+  userId    String
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  leaveType LeaveType
+  reason    String
+  startDate DateTime
+  endDate   DateTime
+  status    LeaveStatus @default(PENDING)
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+}
