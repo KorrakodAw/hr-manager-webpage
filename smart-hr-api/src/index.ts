@@ -13,7 +13,7 @@ const PORT = process.env.PORT || 3001;
 // 🛡️ ปลดล็อก CORS ด่านหน้าประตูแบบ Global จุดเดียวจบการกวนใจ
 app.use(
   cors({
-    origin: "http://localhost:3000",
+    origin: ["http://localhost:3000", "https://hr-manager-webpage.vercel.app"],
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
     credentials: true,
   }),
