@@ -1,6 +1,6 @@
 FROM node:20-alpine
 
-# ติดตั้งไลบรารีช่วยรันสำหรับสยบบั๊ก Prisma ในระบบ Alpine
+# ติดตั้งไลบรารีช่วยรันสำหรับระบบ Alpine
 RUN apk add --no-cache openssl libc6-compat
 
 WORKDIR /app
@@ -13,4 +13,7 @@ COPY . .
 
 EXPOSE 3001
 
-CMD npx prisma generate && npm run dev
+# 🚀 บรรทัดพระเอกสยบบั๊ก Permission Denied:
+# 1. บังคับยัดสิทธิ์ผ่อนปรน (chmod +x) ให้ไฟล์ทูลส์ทั้งหมดรันได้แบบ Executable 
+# 2. เรียก npx prisma generate โดยตรงผ่านเชลล์ของตู้คอนเทนเนอร์
+CMD ["sh", "-c", "chmod -R +x ./node_modules/.bin && npx prisma generate && npm run dev"]
